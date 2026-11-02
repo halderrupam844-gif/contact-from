@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Send us a message through our contact form.">
+  <meta name="description" content="Send us a message and support this project with an optional test donation.">
   <title>Contact Us</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,44 +18,46 @@
 <body>
   <main class="page-shell">
     <section class="contact-card" aria-labelledby="page-title">
-      <div class="eyebrow"><span class="eyebrow-dot"></span> WE'RE HERE TO HELP</div>
-      <h1 id="page-title">Let's talk<span>.</span></h1>
-      <p class="intro">Have a question or an idea? Send us a message and we'll get back to you as soon as we can.</p>
-      <form id="contact-form">
-        <div class="form-grid">
-          <label class="field"><span>Full name <b>*</b></span>
-            <input name="name" autocomplete="name" placeholder="Your name" maxlength="100" required>
+      <div id="contact-step">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> WE'RE HERE TO HELP</div>
+        <h1 id="page-title">Let's talk<span>.</span></h1>
+        <p class="intro">Have a question or an idea? Send us a message and we'll get back to you as soon as we can.</p>
+        <form id="contact-form">
+          <div class="form-grid">
+            <label class="field"><span>Full name <b>*</b></span>
+              <input name="name" autocomplete="name" placeholder="Your name" maxlength="100" required>
+            </label>
+            <label class="field"><span>Email address <b>*</b></span>
+              <input name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254" required>
+            </label>
+            <label class="field"><span>Phone number <small>(optional)</small></span>
+              <input name="phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" maxlength="30">
+            </label>
+            <label class="field"><span>Subject <b>*</b></span>
+              <input name="subject" placeholder="How can we help?" maxlength="200" required>
+            </label>
+          </div>
+          <label class="field message-field"><span>Your message <b>*</b></span>
+            <textarea name="message" placeholder="Tell us a little more..." rows="5" maxlength="5000" required></textarea>
+            <small class="char-count" id="char-count">0 / 5000</small>
           </label>
-          <label class="field"><span>Email address <b>*</b></span>
-            <input name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254" required>
-          </label>
-          <label class="field"><span>Phone number <small>(optional)</small></span>
-            <input name="phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" maxlength="30">
-          </label>
-          <label class="field"><span>Subject <b>*</b></span>
-            <input name="subject" placeholder="How can we help?" maxlength="200" required>
-          </label>
-        </div>
-        <label class="field message-field"><span>Your message <b>*</b></span>
-          <textarea name="message" placeholder="Tell us a little more..." rows="5" maxlength="5000" required></textarea>
-          <small class="char-count" id="char-count">0 / 5000</small>
-        </label>
-        <div class="hp-field" aria-hidden="true">
-          <label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
-        </div>
-        <button id="submit-button" type="submit">
-          <span id="button-label">Send message</span><span aria-hidden="true">↗</span>
-        </button>
-        <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
-      </form>
+          <div class="hp-field" aria-hidden="true">
+            <label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
+          </div>
+          <button id="submit-button" type="submit">
+            <span id="button-label">Send message</span><span aria-hidden="true">↗</span>
+          </button>
+          <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
 
-      <section class="donation-panel" aria-labelledby="donation-title">
-        <div class="donation-eyebrow">SUPPORT THIS PROJECT</div>
-        <h2 id="donation-title">Try a demo donation</h2>
-        <p class="donation-copy">This is a test-only checkout preview. Test transactions are simulated; no real money is collected.</p>
+      <section id="donation-step" class="donation-panel donation-page" aria-labelledby="donation-title" tabindex="-1" hidden>
+        <div class="donation-eyebrow">MESSAGE SENT SUCCESSFULLY</div>
+        <h2 id="donation-title">Thank you for reaching out!</h2>
+        <p class="donation-copy">Your message has been submitted. If you'd like, you can now try an optional donation checkout demo. This is only a test preview—no real money will be collected.</p>
         <form id="donation-form">
           <fieldset class="donation-choices">
-            <legend>Choose an amount</legend>
+            <legend>Choose a demo amount</legend>
             <label><input type="radio" name="donation-amount" value="10" data-donation-amount checked><span>₹10</span></label>
             <label><input type="radio" name="donation-amount" value="20" data-donation-amount><span>₹20</span></label>
             <label><input type="radio" name="donation-amount" value="50" data-donation-amount><span>₹50</span></label>
@@ -70,6 +72,7 @@
           <p id="donation-status" class="form-status" role="status" aria-live="polite"></p>
         </form>
         <p class="test-only-note">TEST MODE ONLY · NO REAL PAYMENT · NO LIVE DONATIONS</p>
+        <button id="back-to-contact" class="secondary-button" type="button">Back to contact page</button>
       </section>
 
       <div class="privacy-note"><span aria-hidden="true">🔒</span> Your information is only used to respond to your message.</div>

@@ -298,3 +298,60 @@ footer span { padding: 0 7px; color: #aab1c1; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+
+/* Two-step contact → optional donation experience */
+[hidden] { display: none !important; }
+.donation-page {
+  margin-top: 0;
+  padding-top: clamp(26px, 5vw, 42px);
+  padding-bottom: clamp(24px, 4vw, 34px);
+  animation: donation-enter .38s ease both;
+}
+.donation-page .donation-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid #d9f0e6;
+  border-radius: 999px;
+  background: #f0fbf5;
+  color: #24744d;
+}
+.donation-page .donation-eyebrow::before {
+  content: "✓";
+  display: inline-grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  border-radius: 50%;
+  background: #d9f3e4;
+  font-size: 11px;
+}
+.donation-page h2 { margin-top: 18px; font-size: clamp(26px, 5vw, 34px); }
+.donation-page .donation-copy { max-width: 580px; margin-bottom: 27px; }
+.secondary-button {
+  width: auto;
+  min-height: 42px;
+  justify-content: center;
+  margin: 18px auto 0;
+  padding: 11px 17px;
+  border: 1px solid #e1e4f0;
+  background: #fff;
+  color: #59627b;
+  box-shadow: none;
+  font-size: 11px;
+}
+.secondary-button:hover {
+  border-color: #c9c4fa;
+  background: #f7f6ff;
+  color: var(--accent-dark);
+  box-shadow: 0 7px 16px rgba(60,55,120,.07);
+}
+@keyframes donation-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .donation-page { animation: none; }
+}
