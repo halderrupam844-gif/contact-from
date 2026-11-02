@@ -10,8 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
+  <script src="donation.js" defer></script>
 </head>
 <body>
   <main class="page-shell">
@@ -46,6 +48,30 @@
         </button>
         <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
       </form>
+
+      <section class="donation-panel" aria-labelledby="donation-title">
+        <div class="donation-eyebrow">SUPPORT THIS PROJECT</div>
+        <h2 id="donation-title">Try a demo donation</h2>
+        <p class="donation-copy">This is a test-only checkout preview. Test transactions are simulated; no real money is collected.</p>
+        <form id="donation-form">
+          <fieldset class="donation-choices">
+            <legend>Choose an amount</legend>
+            <label><input type="radio" name="donation-amount" value="10" data-donation-amount checked><span>₹10</span></label>
+            <label><input type="radio" name="donation-amount" value="20" data-donation-amount><span>₹20</span></label>
+            <label><input type="radio" name="donation-amount" value="50" data-donation-amount><span>₹50</span></label>
+            <label><input type="radio" name="donation-amount" value="100" data-donation-amount><span>₹100</span></label>
+            <label class="custom-choice"><input type="radio" name="donation-amount" value="custom" data-donation-amount><span>Custom</span></label>
+          </fieldset>
+          <label class="field custom-amount-field">
+            <span>Custom amount (₹10–₹5,000)</span>
+            <input id="donation-custom-amount" type="number" min="10" max="5000" step="1" placeholder="Enter amount" disabled>
+          </label>
+          <button id="donate-button" type="submit">Continue to test checkout</button>
+          <p id="donation-status" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+        <p class="test-only-note">TEST MODE ONLY · NO REAL PAYMENT · NO LIVE DONATIONS</p>
+      </section>
+
       <div class="privacy-note"><span aria-hidden="true">🔒</span> Your information is only used to respond to your message.</div>
     </section>
     <footer>CONTACT <span>•</span> WE LOOK FORWARD TO HEARING FROM YOU</footer>
