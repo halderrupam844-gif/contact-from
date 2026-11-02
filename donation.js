@@ -3,6 +3,7 @@
   const amountInput = document.querySelector("#donation-custom-amount");
   const status = document.querySelector("#donation-status");
   const button = document.querySelector("#donate-button");
+  const backButton = document.querySelector("#back-to-contact");
   const presets = [...document.querySelectorAll("[data-donation-amount]")];
   const config = window.SUPABASE_CONFIG || {};
   const endpoint = config.url ? `${config.url}/functions/v1/razorpay-test` : "";
@@ -11,6 +12,13 @@
     status.className = `form-status ${type}`;
     status.textContent = message;
   }
+
+  backButton.addEventListener("click", () => {
+    document.querySelector("#donation-step").hidden = true;
+    document.querySelector("#contact-step").hidden = false;
+    document.querySelector(".privacy-note").hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
   function selectedAmount() {
     const selected = document.querySelector('input[name="donation-amount"]:checked');
