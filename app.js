@@ -5,6 +5,8 @@
   const status = document.querySelector("#form-status");
   const message = form.elements.message;
   const charCount = document.querySelector("#char-count");
+  const contactStep = document.querySelector("#contact-step");
+  const donationStep = document.querySelector("#donation-step");
 
   message.addEventListener("input", () => {
     charCount.textContent = `${message.value.length} / 5000`;
@@ -13,6 +15,14 @@
   function showStatus(type, text) {
     status.className = `form-status ${type}`;
     status.textContent = text;
+  }
+
+  function openDonationStep() {
+    contactStep.hidden = true;
+    donationStep.hidden = false;
+    document.querySelector(".privacy-note").hidden = true;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    donationStep.focus({ preventScroll: true });
   }
 
   form.addEventListener("submit", async (event) => {
@@ -70,7 +80,7 @@
       }
       form.reset();
       charCount.textContent = "0 / 5000";
-      showStatus("success", "Message sent successfully. Thank you for contacting us!");
+      openDonationStep();
     } catch (error) {
       console.error("Contact form error:", error);
       showStatus("error", "A connection issue occurred. Please check your internet and try again.");
