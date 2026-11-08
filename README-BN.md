@@ -9,19 +9,20 @@
 - `config.js` — Supabase Project URL ও publishable key
 - `supabase/functions/contact-auto-reply/index.ts` — Server-side contact insert ও email reply
 - `supabase/migrations/202611080001_contact_auto_reply_rate_limit.sql` — Submission rate-limit database setup
+- `supabase/migrations/202611080002_secure_contact_auto_reply.sql` — Direct anonymous insert বন্ধ ও প্রকৃত rolling-hour limit
 - `supabase/config.toml` — Public contact function-এর JWT gateway setting
 - `supabase/functions/razorpay-test/index.ts` — Existing Razorpay test-only checkout
 
 ## চালানোর ধাপ
 
 1. আপনার Supabase project-এ আগে থেকেই `contacts` টেবিল ও প্রয়োজনীয় columns (`name`, `email`, `phone`, `subject`, `message`) থাকতে হবে।
-2. Supabase Dashboard → SQL Editor-এ `supabase/migrations/202611080001_contact_auto_reply_rate_limit.sql` চালান।
+2. Supabase Dashboard → SQL Editor-এ প্রথমে `202611080001_contact_auto_reply_rate_limit.sql`, তারপর `202611080002_secure_contact_auto_reply.sql` চালান। দ্বিতীয় migration public Data API দিয়ে সরাসরি anonymous/authenticated insert বন্ধ করে; form submission Edge Function দিয়ে হবে।
 3. `supabase/config.toml`-এ public contact endpoint-এর JWT verification বন্ধ করা আছে; function নিজেই origin validation ও rate limit প্রয়োগ করে। Supabase CLI দিয়ে project link করে Edge Function deploy করুন:
    ```sh
    supabase functions deploy contact-auto-reply
    ```
 4. Supabase → Edge Functions → Secrets-এ নিচের server-side secrets যোগ করুন:
-   - `SUPABASE_URL` — আপনার project URL
+   - `SUPABASE_URL` — আপনার project URL (Supabase runtime-এ সাধারণত আগে থেকেই থাকে)
    - `SUPABASE_SERVICE_ROLE_KEY` — project service-role secret; শুধু Edge Function secret-এ রাখবেন
    - `RESEND_API_KEY` — Resend API key
    - `AUTO_REPLY_FROM` — Resend-এ verify করা sender, যেমন `Contact Team <hello@your-domain.com>`
@@ -34,11 +35,11 @@
 - Function Supabase-এর `contacts` table-এ message সংরক্ষণ করে।
 - সফল insert-এর পর Resend দিয়ে sender-কে confirmation email পাঠানোর চেষ্টা করে।
 - Email provider ব্যর্থ হলেও saved contact হারায় না; UI জানায় যে confirmation email পাঠানো যায়নি।
-- একই network/IP hash থেকে প্রতি rolling hour-এ সর্বোচ্চ ৫টি submission অনুমোদিত হয়। এটি অতিরিক্ত spam protection-এর বিকল্প নয়; production-এ CAPTCHA/monitoring-ও বিবেচনা করুন।
+- একই network/IP hash থেকে যেকোনো rolling ১ ঘণ্টায় সর্বোচ্চ ৫টি submission অনুমোদিত হয়।
 
 ## নিরাপত্তা ও নোট
 - `SUPABASE_SERVICE_ROLE_KEY` এবং `RESEND_API_KEY` কেবল Supabase Edge Function secrets-এ রাখুন।
-- Public visitor-কে contacts table-এ সরাসরি SELECT access দেবেন না।
-- Rate-limit migration deploy না করলে Edge Function submission প্রত্যাখ্যান করবে।
+- Public visitor-কে contacts table-এ সরাসরি SELECT বা INSERT access দেবেন না।
+- দুইটি migration deploy না করলে Edge Function submission সঠিকভাবে কাজ করবে না।
 - এই Auto Reply একটি confirmation email; এটি inbox-এ reply handling বা support ticket তৈরি করে না।
 - Razorpay integration আগের মতোই test mode only; এই feature সেটি পরিবর্তন করে না।
