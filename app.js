@@ -17,7 +17,11 @@
     status.textContent = text;
   }
 
-  function openDonationStep() {
+  function openDonationStep(autoReplySent) {
+    const copy = donationStep.querySelector(".donation-copy");
+    copy.textContent = autoReplySent
+      ? "Your message has been submitted, and an automatic confirmation email is on its way. If you'd like, you can now try an optional donation checkout demo. This is only a test preview—no real money will be collected."
+      : "Your message has been submitted. We couldn't send the automatic confirmation email this time, but your message is safely received. If you'd like, you can now try an optional donation checkout demo. This is only a test preview—no real money will be collected.";
     contactStep.hidden = true;
     donationStep.hidden = false;
     document.querySelector(".privacy-note").hidden = true;
@@ -30,7 +34,7 @@
     showStatus("", "");
 
     const config = window.SUPABASE_CONFIG || {};
-    if (!window.supabase || !config.url || !config.publishableKey) {
+    if (!config.url || !config.publishableKey) {
       showStatus("error", "Supabase setup is incomplete. Check config.js.");
       return;
     }
@@ -55,6 +59,7 @@
     if (
       contact.name.length < 1 || contact.name.length > 100 ||
       contact.email.length < 3 || contact.email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email) ||
       contact.subject.length < 1 || contact.subject.length > 200 ||
       contact.message.length < 1 || contact.message.length > 5000 ||
       (contact.phone && contact.phone.length > 30)
@@ -66,21 +71,26 @@
     submitButton.disabled = true;
     buttonLabel.textContent = "Sending…";
     try {
-      const client = window.supabase.createClient(config.url, config.publishableKey);
-      const { error } = await client.from("contacts").insert([contact]);
-      if (error) {
-        console.error("Supabase submission error:", error);
-        showStatus(
-          "error",
-          error.code === "42P01"
-            ? "The contacts table was not found. Check your Supabase setup."
-            : "We couldn't send your message. Please try again later."
-        );
+      const response = await fetch(`${config.url.replace(/\/$/, "")}/functions/v1/contact-auto-reply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": config.publishableKey,
+          "Authorization": `Bearer ${config.publishableKey}`
+        },
+        body: JSON.stringify(contact)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.submitted) {
+        const messageText = response.status === 429
+          ? "Too many messages were sent from this network. Please wait a while and try again."
+          : "We couldn't send your message. Please try again later.";
+        showStatus("error", messageText);
         return;
       }
       form.reset();
       charCount.textContent = "0 / 5000";
-      openDonationStep();
+      openDonationStep(Boolean(result.autoReplySent));
     } catch (error) {
       console.error("Contact form error:", error);
       showStatus("error", "A connection issue occurred. Please check your internet and try again.");

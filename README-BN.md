@@ -1,21 +1,44 @@
 # Supabase Contact Form (HTML + CSS + JavaScript)
 
-এই প্রজেক্টটি আপনার Supabase Project-এ সংযুক্ত করার জন্য কনফিগার করা আছে।
+এই প্রজেক্টটি Supabase-এর `contacts` টেবিলে contact message সংরক্ষণ করে এবং Resend-এর মাধ্যমে ব্যবহারকারীকে automatic confirmation email পাঠাতে পারে।
 
 ## ফাইল
 - `index.html` — Form markup
 - `style.css` — Responsive design
-- `app.js` — Supabase submit logic
-- `config.js` — Project URL ও publishable key
-- `supabase-setup.sql` — Database + RLS setup
+- `app.js` — Contact form submit logic
+- `config.js` — Supabase Project URL ও publishable key
+- `supabase/functions/contact-auto-reply/index.ts` — Server-side contact insert ও email reply
+- `supabase/migrations/202611080001_contact_auto_reply_rate_limit.sql` — Submission rate-limit database setup
+- `supabase/config.toml` — Public contact function-এর JWT gateway setting
+- `supabase/functions/razorpay-test/index.ts` — Existing Razorpay test-only checkout
 
 ## চালানোর ধাপ
-1. Supabase Dashboard → SQL Editor-এ `supabase-setup.sql` চালান (টেবিল আগে থাকলে, SQL-এর schema/policy অংশ সাবধানে পর্যালোচনা করুন)।
-2. `config.js`-এ আপনার Project URL ও publishable key দিন। এতে ইতিমধ্যে আপনার সংযুক্ত Project-এর URL/key রাখা হয়েছে।
-3. `index.html` Live Server দিয়ে খুলুন; অথবা একই ফাইলগুলো যেকোনো static hosting-এ deploy করুন।
-4. Submit করে Supabase Dashboard → Table Editor → `contacts`-এ Row এসেছে কি না যাচাই করুন।
 
-## নিরাপত্তা
-- `publishable` key browser-এ ব্যবহারের জন্য; `service_role` বা secret key কখনো frontend-এ রাখবেন না।
-- Public visitor-এর জন্য শুধু INSERT access দিন, SELECT access নয়।
-- এটি basic honeypot ব্যবহার করে; production-এ server-side rate limiting এবং CAPTCHA বিবেচনা করুন।
+1. আপনার Supabase project-এ আগে থেকেই `contacts` টেবিল ও প্রয়োজনীয় columns (`name`, `email`, `phone`, `subject`, `message`) থাকতে হবে।
+2. Supabase Dashboard → SQL Editor-এ `supabase/migrations/202611080001_contact_auto_reply_rate_limit.sql` চালান।
+3. `supabase/config.toml`-এ public contact endpoint-এর JWT verification বন্ধ করা আছে; function নিজেই origin validation ও rate limit প্রয়োগ করে। Supabase CLI দিয়ে project link করে Edge Function deploy করুন:
+   ```sh
+   supabase functions deploy contact-auto-reply
+   ```
+4. Supabase → Edge Functions → Secrets-এ নিচের server-side secrets যোগ করুন:
+   - `SUPABASE_URL` — আপনার project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` — project service-role secret; শুধু Edge Function secret-এ রাখবেন
+   - `RESEND_API_KEY` — Resend API key
+   - `AUTO_REPLY_FROM` — Resend-এ verify করা sender, যেমন `Contact Team <hello@your-domain.com>`
+5. Resend account-এ sender domain verify করুন এবং email sending সক্রিয় করুন।
+6. `config.js`-এ Supabase Project URL ও publishable key দিন। Browser-এ publishable key ব্যবহার করা যায়; service-role key কখনো frontend-এ রাখবেন না।
+7. `index.html` Live Server বা static hosting-এ চালান। Function-এর allowed origin বর্তমানে `https://halderrupam844-gif.github.io`; অন্য domain হলে Edge Function-এর `allowedOrigin` পরিবর্তন করে redeploy করুন।
+
+## Auto Reply কীভাবে কাজ করে
+- Contact form Edge Function-এ submit হয়; server-side validation ও honeypot check হয়।
+- Function Supabase-এর `contacts` table-এ message সংরক্ষণ করে।
+- সফল insert-এর পর Resend দিয়ে sender-কে confirmation email পাঠানোর চেষ্টা করে।
+- Email provider ব্যর্থ হলেও saved contact হারায় না; UI জানায় যে confirmation email পাঠানো যায়নি।
+- একই network/IP hash থেকে প্রতি rolling hour-এ সর্বোচ্চ ৫টি submission অনুমোদিত হয়। এটি অতিরিক্ত spam protection-এর বিকল্প নয়; production-এ CAPTCHA/monitoring-ও বিবেচনা করুন।
+
+## নিরাপত্তা ও নোট
+- `SUPABASE_SERVICE_ROLE_KEY` এবং `RESEND_API_KEY` কেবল Supabase Edge Function secrets-এ রাখুন।
+- Public visitor-কে contacts table-এ সরাসরি SELECT access দেবেন না।
+- Rate-limit migration deploy না করলে Edge Function submission প্রত্যাখ্যান করবে।
+- এই Auto Reply একটি confirmation email; এটি inbox-এ reply handling বা support ticket তৈরি করে না।
+- Razorpay integration আগের মতোই test mode only; এই feature সেটি পরিবর্তন করে না।
