@@ -1,0 +1,4 @@
+[functions.contact-auto-reply]
+# This is a public contact form endpoint. Abuse controls are enforced in the function
+# (strict origin check, server-side validation, honeypot, and database rate limit).
+verify_jwt = false
