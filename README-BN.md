@@ -9,13 +9,14 @@
 - `config.js` — Supabase Project URL ও publishable key
 - `supabase/functions/contact-auto-reply/index.ts` — Server-side contact insert ও email reply
 - `supabase/migrations/202611080001_contact_auto_reply_rate_limit.sql` — Submission rate-limit database setup
+- `supabase/config.toml` — Public contact function-এর JWT gateway setting
 - `supabase/functions/razorpay-test/index.ts` — Existing Razorpay test-only checkout
 
 ## চালানোর ধাপ
 
 1. আপনার Supabase project-এ আগে থেকেই `contacts` টেবিল ও প্রয়োজনীয় columns (`name`, `email`, `phone`, `subject`, `message`) থাকতে হবে।
 2. Supabase Dashboard → SQL Editor-এ `supabase/migrations/202611080001_contact_auto_reply_rate_limit.sql` চালান।
-3. Supabase Edge Function `contact-auto-reply` deploy করুন:
+3. `supabase/config.toml`-এ public contact endpoint-এর JWT verification বন্ধ করা আছে; function নিজেই origin validation ও rate limit প্রয়োগ করে। Supabase CLI দিয়ে project link করে Edge Function deploy করুন:
    ```sh
    supabase functions deploy contact-auto-reply
    ```
