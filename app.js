@@ -5,8 +5,6 @@
   const status = document.querySelector("#form-status");
   const message = form.elements.message;
   const charCount = document.querySelector("#char-count");
-  const contactStep = document.querySelector("#contact-step");
-  const donationStep = document.querySelector("#donation-step");
 
   message.addEventListener("input", () => {
     charCount.textContent = `${message.value.length} / 5000`;
@@ -15,18 +13,6 @@
   function showStatus(type, text) {
     status.className = `form-status ${type}`;
     status.textContent = text;
-  }
-
-  function openDonationStep(autoReplySent) {
-    const copy = donationStep.querySelector(".donation-copy");
-    copy.textContent = autoReplySent
-      ? "Your message has been submitted, and an automatic confirmation email is on its way. If you'd like, you can now try an optional donation checkout demo. This is only a test preview—no real money will be collected."
-      : "Your message has been submitted. We couldn't send the automatic confirmation email this time, but your message is safely received. If you'd like, you can now try an optional donation checkout demo. This is only a test preview—no real money will be collected.";
-    contactStep.hidden = true;
-    donationStep.hidden = false;
-    document.querySelector(".privacy-note").hidden = true;
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    donationStep.focus({ preventScroll: true });
   }
 
   form.addEventListener("submit", async (event) => {
@@ -59,7 +45,7 @@
     if (
       contact.name.length < 1 || contact.name.length > 100 ||
       contact.email.length < 3 || contact.email.length > 254 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email) ||
+      !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(contact.email) ||
       contact.subject.length < 1 || contact.subject.length > 200 ||
       contact.message.length < 1 || contact.message.length > 5000 ||
       (contact.phone && contact.phone.length > 30)
@@ -71,7 +57,7 @@
     submitButton.disabled = true;
     buttonLabel.textContent = "Sending…";
     try {
-      const response = await fetch(`${config.url.replace(/\/$/, "")}/functions/v1/contact-auto-reply`, {
+      const response = await fetch(`${config.url.replace(/\\/$/, "")}/functions/v1/contact-auto-reply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -90,7 +76,9 @@
       }
       form.reset();
       charCount.textContent = "0 / 5000";
-      openDonationStep(Boolean(result.autoReplySent));
+      showStatus("success", result.autoReplySent
+        ? "Your message has been sent successfully. A confirmation email is on its way."
+        : "Your message has been received successfully. We couldn't send the confirmation email this time.");
     } catch (error) {
       console.error("Contact form error:", error);
       showStatus("error", "A connection issue occurred. Please check your internet and try again.");
