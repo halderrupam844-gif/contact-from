@@ -11,7 +11,6 @@
 - `supabase/migrations/202611080001_contact_auto_reply_rate_limit.sql` — Submission rate-limit database setup
 - `supabase/migrations/202611080002_secure_contact_auto_reply.sql` — Direct anonymous insert বন্ধ ও প্রকৃত rolling-hour limit
 - `supabase/config.toml` — Public contact function-এর JWT gateway setting
-- `supabase/functions/razorpay-test/index.ts` — Existing Razorpay test-only checkout
 
 ## চালানোর ধাপ
 
@@ -42,4 +41,4 @@
 - Public visitor-কে contacts table-এ সরাসরি SELECT বা INSERT access দেবেন না।
 - দুইটি migration deploy না করলে Edge Function submission সঠিকভাবে কাজ করবে না।
 - এই Auto Reply একটি confirmation email; এটি inbox-এ reply handling বা support ticket তৈরি করে না।
-- Razorpay integration আগের মতোই test mode only; এই feature সেটি পরিবর্তন করে না।
+- Contact form submit করার পর আর কোনো payment বা donation page দেখানো হয় না।
