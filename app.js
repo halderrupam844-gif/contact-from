@@ -45,7 +45,7 @@
     if (
       contact.name.length < 1 || contact.name.length > 100 ||
       contact.email.length < 3 || contact.email.length > 254 ||
-      !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(contact.email) ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email) ||
       contact.subject.length < 1 || contact.subject.length > 200 ||
       contact.message.length < 1 || contact.message.length > 5000 ||
       (contact.phone && contact.phone.length > 30)
@@ -57,7 +57,7 @@
     submitButton.disabled = true;
     buttonLabel.textContent = "Sending…";
     try {
-      const response = await fetch(`${config.url.replace(/\\/$/, "")}/functions/v1/contact-auto-reply`, {
+      const response = await fetch(`${config.url.replace(/\/$/, "")}/functions/v1/contact-auto-reply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
