@@ -29,6 +29,37 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+// Read at most maxBytes, even when Content-Length is missing or inaccurate.
+async function readLimitedBody(req: Request, maxBytes: number): Promise<string | null> {
+  const reader = req.body?.getReader();
+  if (!reader) return "";
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(body);
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") {
@@ -38,10 +69,6 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST" || origin !== allowedOrigin) {
     return reply({ error: "Request not allowed" }, 403);
   }
-  if (Number(req.headers.get("content-length") || "0") > 12000) {
-    return reply({ error: "Request is too large." }, 413);
-  }
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const resendKey = Deno.env.get("RESEND_API_KEY") ?? "";
@@ -52,7 +79,22 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const body = await req.json();
+    const rawBody = await readLimitedBody(req, 12000);
+    if (rawBody === null) {
+      return reply({ error: "Request is too large." }, 413);
+    }
+
+    let parsedBody: unknown;
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch {
+      return reply({ error: "Request body must contain valid JSON." }, 400);
+    }
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return reply({ error: "Request body must be a JSON object." }, 400);
+    }
+
+    const body = parsedBody as Record<string, unknown>;
     // The honeypot is checked server-side too.
     if (clean(body.website, 200)) return reply({ submitted: true, autoReplySent: false });
 
