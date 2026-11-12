@@ -62,7 +62,6 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST" || origin !== allowedOrigin) {
     return reply({ error: "Request not allowed" }, 403);
   }
-
   const rawBody = await readLimitedBody(req, 12000).catch((error) => {
     console.error("Contact request body read failed:", error);
     return null;
@@ -89,10 +88,8 @@ Deno.serve(async (req: Request) => {
     subject: clean(body.subject, 200),
     message: clean(body.message, 5000),
   };
-  if (
-    !contact.name || !contact.subject || !contact.message ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)
-  ) {
+  if (!contact.name || !contact.subject || !contact.message ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) {
     return reply({ error: "Please provide valid contact details." }, 400);
   }
 
@@ -115,16 +112,14 @@ Deno.serve(async (req: Request) => {
   try {
     const clientIp = req.headers.get("cf-connecting-ip") ||
       req.headers.get("x-real-ip") ||
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      "unknown";
-    const ipHash = await sha256(clientIp);
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const supabase = createClient(supabaseUrl, secretKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
     const { data: allowed, error: limitError } = await supabase.rpc(
       "consume_contact_submission",
-      { p_ip_hash: ipHash },
+      { p_ip_hash: await sha256(clientIp) },
     );
     if (limitError) {
       console.error("Contact rate-limit check failed:", limitError.message);
@@ -140,20 +135,16 @@ Deno.serve(async (req: Request) => {
       return reply({ error: "Could not save the message." }, 502);
     }
 
-    // Confirmation email is optional: its failure must never undo a saved contact message.
+    let autoReplySent = false;
     const resendKey = Deno.env.get("RESEND_API_KEY") ?? "";
     const fromAddress = Deno.env.get("AUTO_REPLY_FROM") ?? "";
-    let autoReplySent = false;
     if (resendKey && fromAddress) {
       try {
         const safeName = escapeHtml(contact.name);
         const safeSubject = escapeHtml(contact.subject);
         const emailResponse = await fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: fromAddress,
             to: [contact.email],
@@ -170,8 +161,8 @@ Thank you.`,
         });
         autoReplySent = emailResponse.ok;
         if (!emailResponse.ok) {
-          const errorBody = await emailResponse.text();
-          console.error("Auto-reply provider rejected the email:", emailResponse.status, errorBody.slice(0, 300));
+          console.error("Auto-reply provider rejected the email:", emailResponse.status,
+            (await emailResponse.text()).slice(0, 300));
         }
       } catch (emailError) {
         console.error("Auto-reply delivery failed:", emailError);
